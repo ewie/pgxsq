@@ -1,0 +1,27 @@
+[build-system]
+requires = [ "setuptools", "setuptools_scm" ]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pgxsq"
+description = "Write Postgres extensions as Sqitch projects."
+readme = "README.md"
+requires-python = ">= 3.10"
+license = { file = "LICENSE" }
+dynamic = [ "version" ]
+
+[project.optional-dependencies]
+dev = [
+  "docker == 6.0.1",
+  "flake8 == 6.0.0",
+  "psycopg == 3.1.8",
+  "pytest == 7.2.1",
+]
+
+[project.scripts]
+pgxsq = "pgxsq:main"
+
+[tool.pytest.ini_options]
+testpaths = "tests"
+
+[tool.setuptools_scm]
