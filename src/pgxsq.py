@@ -60,12 +60,11 @@ def write_extension(project):
         pass
 
     for cs in project.changesets:
-        with open(f'{extname}--{cs.version}.sql', 'w') as ext:
+        with open(cs.filename(extname), 'w') as ext:
             ext.write(guard)
             ext.write('\n')
-            for cname, _ in cs.changes:
-                with open(f'deploy/{cname}.sql') as change:
-                    ext.write(change.read())
+            for cname, tag in cs.changes:
+                ext.write(project.read_deploy_script(cname, tag))
 
 
 class Project(t.NamedTuple):
@@ -129,6 +128,15 @@ class Project(t.NamedTuple):
 
         return reversed(changesets)
 
+    def read_deploy_script(self, change, tag=None):
+        if tag:
+            filename = f'deploy/{change}@{tag}.sql'
+        else:
+            filename = f'deploy/{change}.sql'
+
+        with open(filename) as f:
+            return f.read()
+
 
 class Change(t.NamedTuple):
     """Change from a Sqitch plan."""
@@ -153,3 +161,9 @@ class Changeset(t.NamedTuple):
     fromver: str | None
     version: str
     changes: list[tuple[str, str | None]]
+
+    def filename(self, extname):
+        if self.fromver:
+            return f'{extname}--{self.fromver}--{self.version}.sql'
+        else:
+            return f'{extname}--{self.version}.sql'

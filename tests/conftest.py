@@ -174,6 +174,12 @@ class Sqitch:
         with open(f'deploy/{name}.sql', 'w') as f:
             f.write(deploy_script)
 
+    def rework(self, name, deploy_script):
+        self._run(['rework', name, '--note', f'Rework {name}'])
+
+        with open(f'deploy/{name}.sql', 'w') as f:
+            f.write(deploy_script)
+
     def tag(self, name):
         self._run(['tag', name, '--note', f'Tag {name}'])
 
