@@ -38,7 +38,7 @@ def read_project():
 
     for line in proc.stdout.splitlines():
         pname, cname, *tags = re.split(r'\s+', line)
-        tags = [t.removeprefix('@') for t in tags]
+        tags = [t.removeprefix('@') for t in tags if t]
 
         if project:
             assert pname == project.name
@@ -86,6 +86,12 @@ class Project(t.NamedTuple):
                     [c.name for c in changes],
                 )
                 changes = []
+
+        # Final changeset for an untagged HEAD.  Refer to that version
+        # as HEAD as well.  That name is safe as Sqitch does not allow
+        # it as tag name.
+        if changes:
+            yield Changeset('HEAD', [c.name for c in changes])
 
 
 class Change(t.NamedTuple):
