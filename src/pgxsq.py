@@ -1,3 +1,4 @@
+import collections
 import re
 import subprocess
 import typing as t
@@ -62,7 +63,7 @@ def write_extension(project):
         with open(f'{extname}--{cs.version}.sql', 'w') as ext:
             ext.write(guard)
             ext.write('\n')
-            for cname in cs.changes:
+            for cname, _ in cs.changes:
                 with open(f'deploy/{cname}.sql') as change:
                     ext.write(change.read())
 
@@ -75,23 +76,58 @@ class Project(t.NamedTuple):
 
     @property
     def changesets(self):
+        # The final changesets.
+        changesets = []
+
+        # Changes for a single changeset.
         changes = []
 
-        for change in self.plan:
-            changes.append(change)
+        # The two most recent tags that determine a changeset version.
+        # Changesets apply to the version given by the left tag and
+        # target the version given by the right tag.
+        tags = collections.deque(['HEAD'], maxlen=2)
 
+        # Map (potentially) reworked changes to the tag when the change
+        # was reworked.
+        rework = {}
+
+        # Collect changes in reverse to trace back reworked changes.
+        for change in reversed(self.plan):
             if change.tags:
-                yield Changeset(
-                    change.tags[0],
-                    [c.name for c in changes],
-                )
-                changes = []
+                tags.appendleft(change.tags[0])
 
-        # Final changeset for an untagged HEAD.  Refer to that version
-        # as HEAD as well.  That name is safe as Sqitch does not allow
-        # it as tag name.
+                if changes:
+                    cs = Changeset(
+                        *tags,
+                        [
+                            (cname, rework.get(cname))
+                            for cname in reversed(changes)
+                        ],
+                    )
+
+                    # Track tags of (possibly) reworked changes.
+                    for cname, _ in cs.changes:
+                        rework[cname] = cs.fromver
+
+                    changesets.append(cs)
+                    changes = []
+
+            changes.append(change.name)
+
+        # Remaining changes before the first tag or untagged HEAD in
+        # case there are no tags at all.
         if changes:
-            yield Changeset('HEAD', [c.name for c in changes])
+            tags.appendleft(None)
+            cs = Changeset(
+                *tags,
+                [
+                    (cname, rework.get(cname))
+                    for cname in reversed(changes)
+                ],
+            )
+            changesets.append(cs)
+
+        return reversed(changesets)
 
 
 class Change(t.NamedTuple):
@@ -102,7 +138,18 @@ class Change(t.NamedTuple):
 
 
 class Changeset(t.NamedTuple):
-    """Set of changes for a single extension script."""
+    """Set of changes for a single extension script.
 
+    The changeset updates an extension from one version to another specified
+    by attributes `fromver` and `version`.  Attribute `fromver` is `None` in
+    case of an install script.  Update scripts that contain the untagged HEAD
+    of a Sqitch plan have attribute `version` set to `HEAD`.
+
+    Attribute `changes` lists optionally tagged changes.  The optional tag
+    name is needed to identity the correct deploy script of each change in
+    case of reworks.  Changes that are not reworked have tag `None`.
+    """
+
+    fromver: str | None
     version: str
-    changes: list[str]
+    changes: list[tuple[str, str | None]]
