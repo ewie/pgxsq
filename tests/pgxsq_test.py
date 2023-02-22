@@ -128,3 +128,13 @@ def test_empty_plan(capsys, cli, sqitch, workdir):
     assert rc == 1
     assert err == "error: empty plan\n"
     assert sorted(extfiles) == []
+
+
+def test_missing_project(capsys, cli, workdir):
+    rc = cli.build()
+    _, err = capsys.readouterr()
+    extfiles = workdir.find_extension_files('test')
+
+    assert rc == 1
+    assert err == "error: no project\n"
+    assert sorted(extfiles) == []

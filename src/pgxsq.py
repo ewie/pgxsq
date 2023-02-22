@@ -26,6 +26,9 @@ def main(args=None):
     except EmptyPlan:
         print("error: empty plan", file=sys.stderr)
         raise SystemExit(1)
+    except ProjectNotFound:
+        print("error: no project", file=sys.stderr)
+        raise SystemExit(1)
 
     write_extension(project)
 
@@ -49,6 +52,9 @@ def read_project():
     # worth the effort just to generate an empty extension.
     if proc.returncode == 1:
         raise EmptyPlan
+
+    if proc.returncode == 2:
+        raise ProjectNotFound
 
     project = None
 
@@ -188,3 +194,7 @@ class Changeset(t.NamedTuple):
 
 class EmptyPlan(Exception):
     """Raised when reading an empty Sqitch plan."""
+
+
+class ProjectNotFound(Exception):
+    """Raised when no Sqitch project is found."""
