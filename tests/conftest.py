@@ -51,7 +51,16 @@ class Pgxsq:
     """
 
     def build(self):
-        pgxsq.main([])
+        """Build extension scripts by invoking the pgxsq command line.
+
+        :return: exit code, 0 on success, 1 on failure
+        """
+        try:
+            pgxsq.main([])
+        except SystemExit as exc:
+            return exc.code
+
+        return 0
 
 
 class Postgres:

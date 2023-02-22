@@ -7,6 +7,7 @@ import typing as t
 def main(args=None):
     import argparse
     import importlib.metadata
+    import sys
 
     version = importlib.metadata.version(__name__)
 
@@ -20,7 +21,13 @@ def main(args=None):
 
     parser.parse_args(args)
 
-    write_extension(read_project())
+    try:
+        project = read_project()
+    except EmptyPlan:
+        print("error: empty plan", file=sys.stderr)
+        raise SystemExit(1)
+
+    write_extension(project)
 
 
 def read_project():
@@ -29,11 +36,19 @@ def read_project():
             'sqitch', '--quiet',
             'plan', '--no-header', '--format', 'format:%o %n %{ }t',
         ],
-        check=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
         text=True,
     )
+
+    # We cannot get the project name from the sqitch-plan output in case of an
+    # empty plan.  sqitch-plan also includes the project name in its optional
+    # headers but those are always omitted on empty plans.  The only other
+    # possibilty is to parse the project pragam from the plan file.  But the
+    # plan file path must be resolved from the project config first.  It's not
+    # worth the effort just to generate an empty extension.
+    if proc.returncode == 1:
+        raise EmptyPlan
 
     project = None
 
@@ -47,6 +62,8 @@ def read_project():
             project = Project(pname, plan=[])
 
         project.plan.append(Change(cname, tags))
+
+    assert project
 
     return project
 
@@ -167,3 +184,7 @@ class Changeset(t.NamedTuple):
             return f'{extname}--{self.fromver}--{self.version}.sql'
         else:
             return f'{extname}--{self.version}.sql'
+
+
+class EmptyPlan(Exception):
+    """Raised when reading an empty Sqitch plan."""

@@ -70,3 +70,9 @@ def test_reworked_change_with_more_tags_in_between():
         Changeset('0.3', '0.4', [('a', '0.4'), ('b', None)]),
         Changeset('0.4', '0.5', [('c', None),  ('a', None)]),
     ]
+
+
+def test_empty_plan():
+    project = Project('test', plan=[])
+
+    assert list(project.changesets) == []

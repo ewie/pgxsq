@@ -116,3 +116,15 @@ def test_rework_in_later_changeset(cli, postgres, sqitch, workdir):
 
         with con.execute("SELECT * FROM foo, bar") as cur:
             assert cur.fetchall() == [(3, 2)]
+
+
+def test_empty_plan(capsys, cli, sqitch, workdir):
+    sqitch.init('test')
+
+    rc = cli.build()
+    _, err = capsys.readouterr()
+    extfiles = workdir.find_extension_files('test')
+
+    assert rc == 1
+    assert err == "error: empty plan\n"
+    assert sorted(extfiles) == []
