@@ -69,8 +69,7 @@ def read_project():
     project = None
 
     for line in proc.stdout.splitlines():
-        pname, cname, *tags = re.split(r'\s+', line)
-        tags = [t.removeprefix('@') for t in tags if t]
+        pname, cname, *tags = re.split(r'\s+', line.strip())
 
         if project:
             assert pname == project.name
@@ -121,7 +120,7 @@ class Project(t.NamedTuple):
         # The two most recent tags that determine a changeset version.
         # Changesets apply to the version given by the left tag and
         # target the version given by the right tag.
-        tags = collections.deque(['HEAD'], maxlen=2)
+        tags = collections.deque([''], maxlen=2)
 
         # Map (potentially) reworked changes to the tag when the change
         # was reworked.
@@ -136,14 +135,14 @@ class Project(t.NamedTuple):
                     cs = Changeset(
                         *tags,
                         [
-                            (cname, rework.get(cname))
+                            (cname, rework.get(cname, ''))
                             for cname in reversed(changes)
                         ],
                     )
 
                     # Track tags of (possibly) reworked changes.
                     for cname, _ in cs.changes:
-                        rework[cname] = cs.fromver
+                        rework[cname] = cs.fromtag
 
                     changesets.append(cs)
                     changes = []
@@ -153,11 +152,11 @@ class Project(t.NamedTuple):
         # Remaining changes before the first tag or untagged HEAD in
         # case there are no tags at all.
         if changes:
-            tags.appendleft(None)
+            tags.appendleft('')
             cs = Changeset(
                 *tags,
                 [
-                    (cname, rework.get(cname))
+                    (cname, rework.get(cname, ''))
                     for cname in reversed(changes)
                 ],
             )
@@ -165,13 +164,11 @@ class Project(t.NamedTuple):
 
         return reversed(changesets)
 
-    def read_deploy_script(self, change, tag=None):
-        if tag:
-            filename = f'deploy/{change}@{tag}.sql'
-        else:
-            filename = f'deploy/{change}.sql'
+    def read_deploy_script(self, change, tag):
+        if tag and not tag.startswith('@'):
+            raise ValueError(f"tag {tag!r} must start with '@'")
 
-        with open(filename) as f:
+        with open(f'deploy/{change}{tag}.sql') as f:
             return f.read()
 
 
@@ -185,25 +182,28 @@ class Change(t.NamedTuple):
 class Changeset(t.NamedTuple):
     """Set of changes for a single extension script.
 
-    The changeset updates an extension from one version to another specified
-    by attributes `fromver` and `version`.  Attribute `fromver` is `None` in
-    case of an install script.  Update scripts that contain the untagged HEAD
-    of a Sqitch plan have attribute `version` set to `HEAD`.
+    Changesets update an extension from one version to another.  The update
+    path is defined by attributes `fromtag` and `tag`.  An empty `fromtag`
+    marks an installation script.  An empty `tag` marks a changeset containing
+    the untagged HEAD of a Sqitch plan.
 
-    Attribute `changes` lists optionally tagged changes.  The optional tag
-    name is needed to identity the correct deploy script of each change in
-    case of reworks.  Changes that are not reworked have tag `None`.
+    Attribute `changes` lists tagged and untagged changes.  The tag name is
+    needed to identify the correct deploy script of each change in case of
+    reworks.  Changes that are not reworked are untagged (empty string).
     """
 
-    fromver: str | None
-    version: str
-    changes: list[tuple[str, str | None]]
+    fromtag: str
+    tag: str
+    changes: list[tuple[str, str]]
 
     def filename(self, extname):
-        if self.fromver:
-            return f'{extname}--{self.fromver}--{self.version}.sql'
+        fromver = self.fromtag.removeprefix('@')
+        version = self.tag.removeprefix('@') or 'HEAD'
+
+        if fromver:
+            return f'{extname}--{fromver}--{version}.sql'
         else:
-            return f'{extname}--{self.version}.sql'
+            return f'{extname}--{version}.sql'
 
 
 class EmptyPlan(Exception):
