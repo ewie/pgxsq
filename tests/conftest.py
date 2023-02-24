@@ -2,6 +2,7 @@ import contextlib
 import glob
 import io
 import os
+import os.path
 import subprocess
 import tarfile
 
@@ -50,13 +51,17 @@ class Pgxsq:
     """Client to the pgxsq command line.
     """
 
-    def build(self):
+    def build(self, dest=None):
         """Build extension scripts by invoking the pgxsq command line.
 
+        :param dest: output directory
         :return: exit code, 0 on success, 1 on failure
         """
+        args = []
+        if dest is not None:
+            args.extend(['--dest', dest])
         try:
-            pgxsq.main([])
+            pgxsq.main(args)
         except SystemExit as exc:
             return exc.code
 
@@ -95,7 +100,7 @@ class Postgres:
         self._container.stop(timeout=0)
 
     @contextlib.contextmanager
-    def load_extension(self, filenames):
+    def load_extension(self, filenames, dirname='.'):
         """Return a context manager that loads extension files into this
         container and removes them upon completion of the block.
         """
@@ -104,7 +109,7 @@ class Postgres:
 
         with tarfile.open(fileobj=tarball, mode='w') as f:
             for fname in filenames:
-                f.add(fname)
+                f.add(os.path.join(dirname, fname), arcname=fname)
 
                 # Check for existing files in the container and don't
                 # just overwrite files with put_archive.
@@ -208,10 +213,11 @@ class Workdir:
     def __init__(self, base):
         self._base = base
 
-    def find_extension_files(self, extname):
+    def find_extension_files(self, extname, dirname='.'):
         extname = glob.escape(extname)
+        root = os.path.join(self._base, dirname)
         return [
             fname
             for pat in (f'{extname}.control', f'{extname}--*.sql')
-            for fname in glob.iglob(pat, root_dir=self._base)
+            for fname in glob.iglob(pat, root_dir=root)
         ]

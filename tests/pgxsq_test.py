@@ -138,3 +138,25 @@ def test_missing_project(capsys, cli, workdir):
     assert rc == 1
     assert err == "error: no project\n"
     assert sorted(extfiles) == []
+
+
+def test_output_directory(cli, postgres, sqitch, workdir):
+    sqitch.init('test')
+    sqitch.add('foo', "CREATE VIEW foo AS SELECT 1;")
+
+    cli.build(dest='ext')
+
+    extfiles = workdir.find_extension_files('test', 'ext')
+
+    assert sorted(extfiles) == [
+        'test--HEAD.sql',
+        'test.control',
+    ]
+
+    with (
+        postgres.load_extension(extfiles, 'ext'),
+        postgres.connect() as con,
+        postgres.extension(con, 'test', 'HEAD'),
+        con.execute("SELECT * FROM foo") as cur,
+    ):
+        assert cur.fetchall() == [(1,)]

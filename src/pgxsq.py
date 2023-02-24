@@ -1,4 +1,7 @@
 import collections
+import functools
+import os
+import os.path
 import re
 import subprocess
 import typing as t
@@ -13,13 +16,20 @@ def main(args=None):
 
     parser = argparse.ArgumentParser(
         description="""
-            Generate Postgres extension from Sqitch project in current working
-            directory.
+            Generate Postgres extension in directory DEST from the Sqitch
+            project in current working directory.  Directory DEST is created
+            automatically.
             """,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        '--dest',
+        default='.',
+        help="generate extension files in this directory",
     )
     parser.add_argument('--version', action='version', version=version)
 
-    parser.parse_args(args)
+    opts = parser.parse_args(args)
 
     try:
         project = read_project()
@@ -30,7 +40,7 @@ def main(args=None):
         print("error: no project", file=sys.stderr)
         raise SystemExit(1)
 
-    write_extension(project)
+    write_extension(project, opts.dest)
 
 
 def read_project():
@@ -74,16 +84,20 @@ def read_project():
     return project
 
 
-def write_extension(project):
+def write_extension(project, dest):
     extname = project.name
     guard = rf'\echo Use "CREATE EXTENSION {extname}" to load this file. \quit'
 
+    filename = functools.partial(os.path.join, dest)
+
+    os.makedirs(dest, exist_ok=True)
+
     # Create empty control file.
-    with open(f'{extname}.control', 'w'):
+    with open(filename(f'{extname}.control'), 'w'):
         pass
 
     for cs in project.changesets:
-        with open(cs.filename(extname), 'w') as ext:
+        with open(filename(cs.filename(extname)), 'w') as ext:
             ext.write(guard)
             ext.write('\n')
             for cname, tag in cs.changes:
