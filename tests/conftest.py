@@ -51,15 +51,18 @@ class Pgxsq:
     """Client to the pgxsq command line.
     """
 
-    def build(self, dest=None):
+    def build(self, dest=None, extschema=None):
         """Build extension scripts by invoking the pgxsq command line.
 
         :param dest: output directory
+        :param extschema: placeholder for @extschema@
         :return: exit code, 0 on success, 1 on failure
         """
         args = []
         if dest is not None:
             args.extend(['--dest', dest])
+        if extschema is not None:
+            args.extend(['--extschema', extschema])
         try:
             pgxsq.main(args)
         except SystemExit as exc:
@@ -168,6 +171,12 @@ class Postgres:
             password=self._PASSWORD,
         )
 
+    def uri(self):
+        return 'postgresql://{user}:{passwd}@{host}:{port}'.format(
+            user=self._USER, passwd=self._PASSWORD, host=self._host,
+            port=self._port,
+        )
+
     def _get_sharedir(self):
         rc, out = self._container.exec_run(['pg_config', '--sharedir'])
         if rc != 0:
@@ -196,6 +205,9 @@ class Sqitch:
 
     def tag(self, name):
         self._run(['tag', name, '--note', f'Tag {name}'])
+
+    def deploy(self, target):
+        self._run(['deploy', '--target', target])
 
     def _run(self, args):
         subprocess.run(

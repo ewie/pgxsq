@@ -202,3 +202,78 @@ def test_transaction(cli, postgres, sqitch, workdir):
             """) as cur,
     ):
         assert cur.fetchall() == [(1, 'Foo')]
+
+
+def test_extschema(cli, postgres, sqitch, workdir):
+    sqitch.init('test')
+    sqitch.add('foo', textwrap.dedent("""
+        CREATE FUNCTION foo()
+            RETURNS text
+            LANGUAGE sql
+            AS $$ SELECT 'extschema' $$;
+
+        CREATE FUNCTION bar()
+            RETURNS text
+            LANGUAGE sql
+            AS $$ SELECT extschema.foo() $$;
+        """))
+
+    cli.build(extschema='extschema')
+
+    extfiles = workdir.find_extension_files('test')
+
+    assert sorted(extfiles) == [
+        'test--HEAD.sql',
+        'test.control',
+    ]
+
+    # Test extension via CREATE EXTENSION.
+
+    with (
+        postgres.load_extension(extfiles),
+        postgres.connect() as con,
+        postgres.extension(con, 'test', 'HEAD'),
+        con.execute("SELECT foo(), bar()") as cur,
+    ):
+        assert cur.fetchall() == [('public', 'public')]
+
+    # Test that sqitch-deploy can be used with the extschema placeholder.
+
+    try:
+        # Prepare the database so that extschema is an actual schema on the
+        # search_path.
+        with postgres.connect() as con:
+            con.execute("""
+                CREATE SCHEMA extschema;
+
+                DO $$
+                BEGIN
+                    EXECUTE format(
+                        'ALTER DATABASE %I SET search_path = extschema',
+                        current_database(), 'extschema'
+                    );
+                END $$;
+                """)
+
+        sqitch.deploy(postgres.uri())
+
+        with (
+            postgres.connect() as con,
+            con.execute("SELECT foo(), bar()") as cur,
+        ):
+            assert cur.fetchall() == [('extschema', 'extschema')]
+    finally:
+        # Reset the database.
+        with postgres.connect() as con:
+            con.execute("""
+                DO $$
+                BEGIN
+                    EXECUTE format(
+                        'ALTER DATABASE %I RESET search_path',
+                        current_database()
+                    );
+                END $$;
+
+                DROP SCHEMA extschema CASCADE;
+                DROP SCHEMA sqitch CASCADE;
+                """)

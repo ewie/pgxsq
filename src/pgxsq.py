@@ -27,6 +27,10 @@ def main(args=None):
         default='.',
         help="generate extension files in this directory",
     )
+    parser.add_argument(
+        '--extschema',
+        help="replace this substring with @extschema@",
+    )
     parser.add_argument('--version', action='version', version=version)
 
     opts = parser.parse_args(args)
@@ -40,7 +44,7 @@ def main(args=None):
         print("error: no project", file=sys.stderr)
         raise SystemExit(1)
 
-    write_extension(project, opts.dest)
+    write_extension(project, opts.dest, opts.extschema)
 
 
 def read_project():
@@ -83,7 +87,7 @@ def read_project():
     return project
 
 
-def write_extension(project, dest):
+def write_extension(project, dest, extschema):
     extname = project.name
     guard = rf'\echo Use "CREATE EXTENSION {extname}" to load this file. \quit'
 
@@ -102,6 +106,8 @@ def write_extension(project, dest):
             for cname, tag in cs.changes:
                 with project.open_deploy_script(cname, tag) as fp:
                     for ln in strip_transactions(fp):
+                        if extschema:
+                            ln = ln.replace(extschema, '@extschema@')
                         ext.write(ln)
 
 
