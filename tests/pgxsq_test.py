@@ -1,3 +1,6 @@
+import textwrap
+
+
 def test_tagged_head(cli, postgres, sqitch, workdir):
     sqitch.init('test')
     sqitch.add('foo', "CREATE VIEW foo AS SELECT 1;")
@@ -160,3 +163,42 @@ def test_output_directory(cli, postgres, sqitch, workdir):
         con.execute("SELECT * FROM foo") as cur,
     ):
         assert cur.fetchall() == [(1,)]
+
+
+def test_transaction(cli, postgres, sqitch, workdir):
+    sqitch.init('test')
+    sqitch.add('foo', textwrap.dedent("""
+        BEGIN;
+        CREATE FUNCTION foo()
+            RETURNS int
+            LANGUAGE sql
+            AS 'SELECT 1';
+        COMMENT ON FUNCTION foo() IS 'Foo';
+        COMMIT;
+        """))
+
+    cli.build()
+
+    extfiles = workdir.find_extension_files('test')
+
+    assert sorted(extfiles) == [
+        'test--HEAD.sql',
+        'test.control',
+    ]
+
+    with (
+        postgres.load_extension(extfiles),
+        postgres.connect() as con,
+        postgres.extension(con, 'test', 'HEAD'),
+        con.execute("""
+            SELECT
+                foo(),
+                (
+                    SELECT description
+                    FROM pg_description
+                    WHERE objoid = 'foo()'::regprocedure
+                    AND classoid = 'pg_proc'::regclass
+                )
+            """) as cur,
+    ):
+        assert cur.fetchall() == [(1, 'Foo')]

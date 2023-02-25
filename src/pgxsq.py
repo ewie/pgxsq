@@ -100,7 +100,49 @@ def write_extension(project, dest):
             ext.write(guard)
             ext.write('\n')
             for cname, tag in cs.changes:
-                ext.write(project.read_deploy_script(cname, tag))
+                with project.open_deploy_script(cname, tag) as fp:
+                    for ln in strip_transactions(fp):
+                        ext.write(ln)
+
+
+def strip_transactions(lines):
+    """Strip transaction control commands from lines of a Sqitch change script.
+
+    Sqitch recommends explicit transactions for atomic changes.  Extension
+    scripts, however, do not permit transaction control commands because
+    extensions are installed in an implicit transaction.  Therefore, scripts
+    must be stripped of transaction control commands.
+
+    The filter removes lines that only contain the commands BEGIN or COMMIT
+    followed by a semicolon.  A single trailing line feed is the only allowed
+    whitespace.  The filter is case-insensitive.
+
+    The filter is that strict to minimize edge cases where it would detect
+    false positives in certain contexts, e.g. multiline string literals.
+
+    Consider the following definition of function `foo` that returns a string
+    that is formatted such that BEGIN and COMMIT appear on separate lines as if
+    they are transaction control commands.
+
+        BEGIN;
+
+        CREATE FUNCTION foo()
+            RETURNS text
+            LANGUAGE plpgsql
+            AS $$
+        BEGIN
+            RETURN '
+        BEGIN;
+        COMMIT;
+        ';
+        END $$;
+
+        COMMIT;
+    """
+    return filter(
+        lambda ln: ln.upper() not in ('BEGIN;\n', 'COMMIT;\n'),
+        lines,
+    )
 
 
 class Project(t.NamedTuple):
@@ -164,12 +206,11 @@ class Project(t.NamedTuple):
 
         return reversed(changesets)
 
-    def read_deploy_script(self, change, tag):
+    def open_deploy_script(self, change, tag):
         if tag and not tag.startswith('@'):
             raise ValueError(f"tag {tag!r} must start with '@'")
 
-        with open(f'deploy/{change}{tag}.sql') as f:
-            return f.read()
+        return open(f'deploy/{change}{tag}.sql')
 
 
 class Change(t.NamedTuple):
