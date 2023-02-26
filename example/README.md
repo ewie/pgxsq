@@ -54,3 +54,32 @@ Commit release `0.1`:
 
     git add -u
     git commit -m 'Release 0.1'
+
+
+## Build and test `array_util 0.1`
+
+We need to build the actual extension files.  Run `pgxsq` and let it write the
+extension files to `ext`:
+
+    pgxsq --dest ext
+
+Add the extension files of `array_util` to Postgres:
+
+    cp -t "$(pg_config --sharedir)"/extension \
+      ext/array_util.control \
+      ext/array_util--0.1.sql
+
+Notice that `pgxsq` created empty control file `array_util.control` which is
+enough for this example.  But in general you would modify the control file as
+necessary for your particular extension.
+
+Connect with `psql` to database `test`, install `array_util` version `0.1`,
+and check that `array_sort` works:
+
+    test=# CREATE EXTENSION array_util VERSION '0.1';
+    CREATE EXTENSION
+    test=# SELECT array_sort(array[1,3,2]);
+     array_sort
+    ------------
+     {1,2,3}
+    (1 row)
