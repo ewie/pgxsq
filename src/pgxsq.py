@@ -20,9 +20,9 @@ def main(args=None):
 
     parser = argparse.ArgumentParser(
         description="""
-            Generate Postgres extension in directory DEST from the Sqitch
-            project in current working directory.  Directory DEST is created
-            automatically.
+            Generate Postgres extension files in directory DEST from the Sqitch
+            project in the current working directory.  Creates directory DEST
+            as necessary.
             """,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
