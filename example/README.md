@@ -137,3 +137,34 @@ Commit release `0.2`:
 
     git add -u
     git commit -m 'Release 0.2'
+
+
+## Build and test `array_util 0.2`
+
+Rebuild the extension in directory `ext`:
+
+    pgxsq --dest ext
+
+Add the extension files of `array_util` to Postgres:
+
+    cp -t "$(pg_config --sharedir)"/extension \
+      ext/array_util.control \
+      ext/array_util--0.1.sql \
+      ext/array_util--0.1--0.2.sql
+
+Connect with `psql` to database `test`, update `array_util` to version `0.2`,
+and check that `array_sort` now supports reverse sort order:
+
+    test=# ALTER EXTENSION array_util UPDATE TO '0.2';
+    ALTER EXTENSION
+    test=# SELECT array_sort(array[1,3,2]);
+     array_sort
+    ------------
+     {1,2,3}
+    (1 row)
+
+    test=# SELECT array_sort(array[1,3,2], reverse => true);
+     array_sort
+    ------------
+     {3,2,1}
+    (1 row)
