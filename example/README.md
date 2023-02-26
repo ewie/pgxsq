@@ -41,3 +41,16 @@ Commit change `array_sort`:
 
     git add .
     git commit -m 'Add array_sort'
+
+
+## Release `array_util 0.1`
+
+Extension `array_util` does not offer much at this point but we want to get
+some feedback.  Let's release version `0.1` by tagging the last change:
+
+    sqitch tag 0.1 --note 'Release 0.1'
+
+Commit release `0.1`:
+
+    git add -u
+    git commit -m 'Release 0.1'
