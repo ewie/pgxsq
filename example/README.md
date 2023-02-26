@@ -83,3 +83,45 @@ and check that `array_sort` works:
     ------------
      {1,2,3}
     (1 row)
+
+
+## Support reverse ordering with `array_sort`
+
+We published extension `array_util` and already got feedback: revese sort order
+would also be useful.  We can cover that use case by changing `array_sort` to
+accept boolean argument `reverse`.
+
+Adding arguments changes the function signature (even when using default
+values).  Luckily we only released `0.1` so far and haven't committed to a
+stable interface yet.
+
+Rework change `array_sort`:
+
+    sqitch rework array_sort --note 'Add reverse flag to array_sort'
+
+Modifiy `deploy/array_sort.sql` to drop `array_sort` and re-create it with
+additional argument `reverse`:
+
+    BEGIN;
+
+    DROP FUNCTION array_sort(anycompatiblearray);
+
+    CREATE FUNCTION array_sort(xs anycompatiblearray, reverse bool = false)
+      RETURNS anycompatiblearray
+      LANGUAGE sql
+      IMMUTABLE LEAKPROOF
+      AS $$
+        SELECT
+          CASE WHEN reverse
+            THEN array_agg(x order by x desc)
+            ELSE array_agg(x order by x)
+          END
+        FROM (SELECT unnest(xs)) t(x)
+      $$;
+
+    COMMIT;
+
+Commit reworked change `array_sort`:
+
+    git add -u
+    git commit -m 'Add reverse flag to array_sort'

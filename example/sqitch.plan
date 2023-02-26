@@ -3,3 +3,4 @@
 
 array_sort 2023-02-26T20:26:35Z Erik Wienhold <ewie@ewie.name> # Add array_sort
 @0.1 2023-02-26T20:32:57Z Erik Wienhold <ewie@ewie.name> # Release 0.1
+array_sort [array_sort@0.1] 2023-02-26T20:45:56Z Erik Wienhold <ewie@ewie.name> # Add array_sort with reverse order
