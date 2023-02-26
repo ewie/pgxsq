@@ -17,6 +17,12 @@ and tracked in version control.  pgxsq builds the extension update paths from
 the Sqitch [tags][sqitch-tag] that are required for reworking.
 
 
+## Example
+
+This repository contains an [example](example) that shows the steps from
+creating the Sqitch project to making changes to installing the extension.
+
+
 ## Installation
 
 Install with `pip`:
