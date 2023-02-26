@@ -125,3 +125,15 @@ Commit reworked change `array_sort`:
 
     git add -u
     git commit -m 'Add reverse flag to array_sort'
+
+
+## Release `array_util 0.2`
+
+Tag release `0.2`:
+
+    sqitch tag 0.2 --note 'Release 0.2'
+
+Commit release `0.2`:
+
+    git add -u
+    git commit -m 'Release 0.2'
