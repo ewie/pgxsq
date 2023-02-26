@@ -1,5 +1,7 @@
 import textwrap
 
+import pytest
+
 
 def test_tagged_head(cli, postgres, sqitch, workdir):
     sqitch.init('test')
@@ -277,3 +279,20 @@ def test_extschema(cli, postgres, sqitch, workdir):
                 DROP SCHEMA extschema CASCADE;
                 DROP SCHEMA sqitch CASCADE;
                 """)
+
+
+@pytest.mark.parametrize(
+    'extname', [
+        # The only invalid names that are valid Sqitch project names.
+        'te--st', 'te/st',
+    ],
+)
+def test_invalid_extname(capsys, cli, extname, sqitch, workdir):
+    sqitch.init(extname)
+    sqitch.add('a', "")
+
+    rc = cli.build()
+    _, err = capsys.readouterr()
+
+    assert rc == 1
+    assert err.startswith("error: invalid extension name or version: ")

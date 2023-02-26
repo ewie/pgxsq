@@ -1,4 +1,6 @@
-from pgxsq import Change, Changeset, Project
+import pytest
+
+from pgxsq import Change, Changeset, InvalidName, Project
 
 
 def test_untagged_head():
@@ -76,3 +78,37 @@ def test_empty_plan():
     project = Project('test', plan=[])
 
     assert list(project.changesets) == []
+
+
+@pytest.mark.parametrize(
+    'extname', ['', '-test', 'test-', 'te--st', 'te/st', r'te\st'],
+)
+def test_filename_invalid_extname(extname):
+    project = Project('test', plan=[Change('a', [])])
+    cs = next(project.changesets)
+
+    with pytest.raises(InvalidName):
+        cs.filename(extname)
+
+
+@pytest.mark.parametrize(
+    'version', [
+        '0--rc',
+        # The following names are not valid Sqitch tags.
+        '-0', '0-', '0/rc', r'0\rc',
+    ],
+)
+def test_filename_invalid_version(version):
+    project = Project('test', plan=[
+        Change('a', [version]),
+        Change('b', []),
+    ])
+    cs = project.changesets
+
+    # Test invalid target version with first changeset.
+    with pytest.raises(InvalidName):
+        next(cs).filename(project.name)
+
+    # Test invalid base version with second changeset.
+    with pytest.raises(InvalidName):
+        next(cs).filename(project.name)

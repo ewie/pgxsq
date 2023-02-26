@@ -46,7 +46,10 @@ def main(args=None):
     except ProjectNotFound:
         die("no project")
 
-    write_extension(project, opts.dest, opts.extschema)
+    try:
+        write_extension(project, opts.dest, opts.extschema)
+    except InvalidName as exc:
+        die(f"invalid extension name or version: {exc}")
 
 
 def read_project():
@@ -90,7 +93,7 @@ def read_project():
 
 
 def write_extension(project, dest, extschema):
-    extname = project.name
+    extname = valid_name(project.name)
     guard = rf'\echo Use "CREATE EXTENSION {extname}" to load this file. \quit'
 
     filename = functools.partial(os.path.join, dest)
@@ -221,6 +224,35 @@ class Project(t.NamedTuple):
         return open(f'deploy/{change}{tag}.sql')
 
 
+def valid_name(name):
+    """Validate an extension name or version name.
+
+    The Postgres documentation does not specify what valid extension and
+    version names look like.  Except for not containing "--" as well as
+    leading or trailing "-". [0]
+
+    CREATE EXTENSION and ALTER EXTENSION also check for path separators [1].
+
+    [0] https://www.postgresql.org/docs/current/extend-extensions.html
+    [1] https://git.postgresql.org/gitweb/?p=postgresql.git;a=blob;f=src/backend/commands/extension.c;hb=c8e1ba736b2b9e8c98d37a5b77c4ed31baf94147#l263
+    """  # noqa:E501
+    if not name:
+        raise InvalidName("empty")
+
+    if '--' in name:
+        raise InvalidName(f"contains '--': {name!r}")
+
+    if name.startswith('-') or name.endswith('-'):
+        raise InvalidName(f"starts or ends with '-': {name!r}")
+
+    # Check for both kinds of path separators, whereas Postgres only checks
+    # for backslash on Windows.
+    if '/' in name or '\\' in name:
+        raise InvalidName(f"contains path separator: {name!r}")
+
+    return name
+
+
 class Change(t.NamedTuple):
     """Change from a Sqitch plan."""
 
@@ -246,10 +278,12 @@ class Changeset(t.NamedTuple):
     changes: list[tuple[str, str]]
 
     def filename(self, extname):
+        extname = valid_name(extname)
         fromver = self.fromtag.removeprefix('@')
-        version = self.tag.removeprefix('@') or 'HEAD'
+        version = valid_name(self.tag.removeprefix('@') or 'HEAD')
 
         if fromver:
+            valid_name(fromver)
             return f'{extname}--{fromver}--{version}.sql'
         else:
             return f'{extname}--{version}.sql'
@@ -261,3 +295,7 @@ class EmptyPlan(Exception):
 
 class ProjectNotFound(Exception):
     """Raised when no Sqitch project is found."""
+
+
+class InvalidName(Exception):
+    """Raised on invalid extension name or version name."""
