@@ -12,6 +12,10 @@ def main(args=None):
     import importlib.metadata
     import sys
 
+    def die(msg):
+        print(f"error: {msg}", file=sys.stderr)
+        raise SystemExit(1)
+
     version = importlib.metadata.version(__name__)
 
     parser = argparse.ArgumentParser(
@@ -38,11 +42,9 @@ def main(args=None):
     try:
         project = read_project()
     except EmptyPlan:
-        print("error: empty plan", file=sys.stderr)
-        raise SystemExit(1)
+        die("empty plan")
     except ProjectNotFound:
-        print("error: no project", file=sys.stderr)
-        raise SystemExit(1)
+        die("no project")
 
     write_extension(project, opts.dest, opts.extschema)
 
