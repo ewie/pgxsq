@@ -17,10 +17,14 @@ and tracked in version control.  pgxsq builds the extension update paths from
 the Sqitch [tags][sqitch-tag] that are required for reworking.
 
 
-## Usage
+## Installation
+
+Install with `pip`:
 
     pip install pgxsq
-    pgxsq --help
+
+You also need to [install][sqitch-download] Sqitch to create projects and use
+pgxsq.
 
 
 ## Development setup
@@ -44,5 +48,6 @@ Lint and test:
 [Postgres extensions]: https://www.postgresql.org/docs/current/extend-extensions.html
 [procedural languages]: https://www.postgresql.org/docs/current/xplang.html
 [Sqitch]: https://sqitch.org
+[sqitch-download]: https://sqitch.org/download/
 [sqitch-rework]: https://sqitch.org/docs/manual/sqitch-rework/
 [sqitch-tag]: https://sqitch.org/docs/manual/sqitch-rework/
