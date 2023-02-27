@@ -141,7 +141,7 @@ class Postgres:
 
             if rc != 0:
                 raise RuntimeError(
-                    "failed to remove extension files: {filename!r}"
+                    f"failed to remove extension files: {filenames!r}"
                 )
 
     @contextlib.contextmanager
