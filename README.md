@@ -23,26 +23,17 @@ Install with `pip`:
 
     pip install pgxsq
 
+Install from source:
+
+    make install
+
 You also need to [install][sqitch-download] Sqitch to create projects and use
 pgxsq.
 
 
-## Development setup
+## Development
 
-Setup virtual environment:
-
-    python3 -m venv .venv
-    source .venv/bin/activate
-    pip install --upgrade pip
-
-Install:
-
-    pip install --editable .[dev]
-
-Lint and test:
-
-    flake8
-    pytest
+    make
 
 
 [Postgres extensions]: https://www.postgresql.org/docs/current/extend-extensions.html
