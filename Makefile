@@ -5,6 +5,11 @@ venv := .venv
 .PHONY: all
 all: deps check test
 
+.PHONY: build
+build: venv
+	source $(venv)/bin/activate \
+	  && $(python) -m build
+
 .PHONY:
 check: venv
 	source $(venv)/bin/activate \
@@ -12,7 +17,7 @@ check: venv
 
 .PHONY: clean
 clean:
-	rm -fr $(venv)
+	rm -fr $(venv) dist
 	find -name '*.pyc' -delete
 
 .PHONY: deps
