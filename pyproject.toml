@@ -9,6 +9,17 @@ readme = "README.md"
 requires-python = ">= 3.10"
 license = { file = "LICENSE" }
 dynamic = [ "version" ]
+classifiers = [
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: BSD License",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Topic :: Software Development :: Build Tools",
+]
+authors = [
+  { name = "Erik Wienhold", email = "ewie@ewie.name" },
+]
 
 [project.optional-dependencies]
 dev = [
@@ -20,6 +31,9 @@ dev = [
 
 [project.scripts]
 pgxsq = "pgxsq:main"
+
+[project.urls]
+"Repository" = "https://gitlab.com/ewie/pgxsq"
 
 [tool.pytest.ini_options]
 testpaths = "tests"
