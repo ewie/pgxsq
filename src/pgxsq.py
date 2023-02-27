@@ -23,6 +23,12 @@ def main(args=None):
             Generate Postgres extension files in directory DEST from the Sqitch
             project in the current working directory.  Creates directory DEST
             as necessary.
+
+            Placeholder @extschema@ can be used directly in Sqitch changes.
+            Deploying those changes, however, requires a distinct placeholder
+            EXTSCHEMA so that Sqitch can deploy syntactically valid changes.
+            This also requires a matching schema on search_path in target
+            database.  pgxsq substitutes @extschema@ for EXTSCHEMA.
             """,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
