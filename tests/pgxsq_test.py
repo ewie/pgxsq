@@ -252,7 +252,7 @@ def test_extschema(cli, postgres, sqitch, workdir):
                 BEGIN
                     EXECUTE format(
                         'ALTER DATABASE %I SET search_path = extschema',
-                        current_database(), 'extschema'
+                        current_database()
                     );
                 END $$;
                 """)
