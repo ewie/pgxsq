@@ -35,6 +35,7 @@ test: venv
 	source $(venv)/bin/activate \
 	  && pytest
 
+.PHONY: venv
 venv: $(venv)/.gitignore
 
 $(venv)/.gitignore:
