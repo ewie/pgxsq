@@ -17,7 +17,7 @@ check: venv
 
 .PHONY: clean
 clean:
-	rm -fr $(venv) dist
+	rm -fr dist
 	find -name '*.pyc' -delete
 
 .PHONY: deps
