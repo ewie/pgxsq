@@ -16,9 +16,20 @@ check: venv
 	  && flake8
 
 .PHONY: clean
-clean:
+clean: clean-buildfiles clean-pycache clean-testfiles
+
+.PHONY: clean-buildfiles
+clean-buildfiles:
 	rm -fr dist
-	find -name '*.pyc' -delete
+	rm -fr src/pgxsq.egg-info
+
+.PHONY: clean-pycache
+clean-pycache:
+	find -name __pycache__ -exec rm -fr {} +
+
+.PHONY: clean-testfiles
+clean-testfiles:
+	rm -fr .pytest_cache
 
 .PHONY: deps
 deps: venv
