@@ -1,18 +1,17 @@
-python := python3
+system_python := python3
 venv := .venv
+venv_python := $(venv)/bin/python3
 
 .PHONY: all
 all: deps check test
 
 .PHONY: build
 build: venv
-	source $(venv)/bin/activate \
-	  && $(python) -m build
+	$(venv_python) -m build
 
 .PHONY:
 check: venv
-	source $(venv)/bin/activate \
-	  && flake8
+	$(venv_python) -m flake8
 
 .PHONY: clean
 clean: clean-buildfiles clean-pycache clean-testfiles
@@ -32,9 +31,8 @@ clean-testfiles:
 
 .PHONY: deps
 deps: venv
-	source $(venv)/bin/activate \
-	  && pip install --upgrade pip \
-	  && pip install --editable .[dev]
+	$(venv_python) -m pip install --upgrade pip
+	$(venv_python) -m pip install --editable .[dev]
 
 .PHONY: install
 install:
@@ -42,12 +40,11 @@ install:
 
 .PHONY: test
 test: venv
-	source $(venv)/bin/activate \
-	  && pytest
+	$(venv_python) -m pytest
 
 .PHONY: venv
 venv: $(venv)/.gitignore
 
 $(venv)/.gitignore:
-	test -d $(venv) || $(python) -m venv $(venv)
+	test -d $(venv) || $(system_python) -m venv $(venv)
 	echo '*' > $@
