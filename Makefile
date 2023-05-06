@@ -1,4 +1,3 @@
-SHELL := bash
 python := python3.10
 venv := .venv
 
