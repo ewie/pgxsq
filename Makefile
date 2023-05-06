@@ -32,7 +32,8 @@ clean-testfiles:
 .PHONY: deps
 deps: venv
 	$(venv_python) -m pip install --upgrade pip
-	$(venv_python) -m pip install --editable .[dev]
+	$(venv_python) -m pip install -r requirements/dev.txt
+	$(venv_python) -m pip install --editable .
 
 .PHONY: install
 install:
