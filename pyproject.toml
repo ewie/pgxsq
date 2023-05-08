@@ -7,7 +7,7 @@ name = "pgxsq"
 description = "Write Postgres extensions as Sqitch projects."
 readme = "README.md"
 requires-python = ">=3.8"
-license = { file = "LICENSE" }
+license.text = "BSD-3-Clause"
 dynamic = [ "version" ]
 classifiers = [
   "Intended Audience :: Developers",
