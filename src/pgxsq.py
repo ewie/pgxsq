@@ -180,12 +180,12 @@ class Project(t.NamedTuple):
         changes = []
 
         # The two most recent tags that determine a changeset version.
-        # Changesets apply to the version given by the left tag and
-        # target the version given by the right tag.
+        # Changesets apply to the version given by the first tag and
+        # target the version given by the second tag.
         tags = collections.deque([''], maxlen=2)
 
-        # Map (potentially) reworked changes to the tag when the change
-        # was reworked.
+        # Map (potentially) reworked changes to the tag under which
+        # the change was reworked.
         rework = {}
 
         # Collect changes in reverse to trace back reworked changes.
