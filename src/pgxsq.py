@@ -166,7 +166,7 @@ class Project(t.NamedTuple):
     """Sqitch project."""
 
     name: str
-    plan: list['Change']
+    plan: t.List['Change']
 
     @property
     def changesets(self):
@@ -263,7 +263,7 @@ class Change(t.NamedTuple):
     """Change from a Sqitch plan."""
 
     name: str
-    tags: list[str]
+    tags: t.List[str]
 
 
 class Changeset(t.NamedTuple):
@@ -281,18 +281,28 @@ class Changeset(t.NamedTuple):
 
     fromtag: str
     tag: str
-    changes: list[tuple[str, str]]
+    changes: t.List[t.Tuple[str, str]]
 
     def filename(self, extname):
         extname = valid_name(extname)
-        fromver = self.fromtag.removeprefix('@')
-        version = valid_name(self.tag.removeprefix('@') or 'HEAD')
+        fromver = _removeprefix(self.fromtag, '@')
+        version = valid_name(_removeprefix(self.tag, '@') or 'HEAD')
 
         if fromver:
             valid_name(fromver)
             return f'{extname}--{fromver}--{version}.sql'
         else:
             return f'{extname}--{version}.sql'
+
+
+try:
+    _removeprefix = str.removeprefix
+except AttributeError:  # py38
+    # https://peps.python.org/pep-0616/#specification
+    def _removeprefix(s, prefix):
+        if s.startswith(prefix):
+            return s[len(prefix):]
+        return s
 
 
 class EmptyPlan(Exception):

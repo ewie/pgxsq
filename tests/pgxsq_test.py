@@ -17,12 +17,11 @@ def test_tagged_head(cli, postgres, sqitch, workdir):
         'test.control',
     ]
 
-    with (
-        postgres.load_extension(extfiles),
-        postgres.connect() as con,
-        postgres.extension(con, 'test', '0.1'),
-        con.execute("SELECT * FROM foo") as cur,
-    ):
+    with postgres.load_extension(extfiles), \
+         postgres.connect() as con, \
+         postgres.extension(con, 'test', '0.1'), \
+         con.execute("SELECT * FROM foo") as cur:
+
         assert cur.fetchall() == [(1,)]
 
 
@@ -39,12 +38,11 @@ def test_untagged_head(cli, postgres, sqitch, workdir):
         'test.control',
     ]
 
-    with (
-        postgres.load_extension(extfiles),
-        postgres.connect() as con,
-        postgres.extension(con, 'test', 'HEAD'),
-        con.execute("SELECT * FROM foo") as cur,
-    ):
+    with postgres.load_extension(extfiles), \
+         postgres.connect() as con, \
+         postgres.extension(con, 'test', 'HEAD'), \
+         con.execute("SELECT * FROM foo") as cur:
+
         assert cur.fetchall() == [(1,)]
 
 
@@ -66,11 +64,10 @@ def test_rework_in_next_changeset(cli, postgres, sqitch, workdir):
         'test.control',
     ]
 
-    with (
-        postgres.load_extension(extfiles),
-        postgres.connect() as con,
-        postgres.extension(con, 'test', '0.1'),
-    ):
+    with postgres.load_extension(extfiles), \
+         postgres.connect() as con, \
+         postgres.extension(con, 'test', '0.1'):
+
         with con.execute("SELECT * FROM foo") as cur:
             assert cur.fetchall() == [(1,)]
 
@@ -104,11 +101,10 @@ def test_rework_in_later_changeset(cli, postgres, sqitch, workdir):
         'test.control',
     ]
 
-    with (
-        postgres.load_extension(extfiles),
-        postgres.connect() as con,
-        postgres.extension(con, 'test', '0.1'),
-    ):
+    with postgres.load_extension(extfiles), \
+         postgres.connect() as con, \
+         postgres.extension(con, 'test', '0.1'):
+
         with con.execute("SELECT * FROM foo") as cur:
             assert cur.fetchall() == [(1,)]
 
@@ -158,12 +154,11 @@ def test_output_directory(cli, postgres, sqitch, workdir):
         'test.control',
     ]
 
-    with (
-        postgres.load_extension(extfiles, 'ext'),
-        postgres.connect() as con,
-        postgres.extension(con, 'test', 'HEAD'),
-        con.execute("SELECT * FROM foo") as cur,
-    ):
+    with postgres.load_extension(extfiles, 'ext'), \
+         postgres.connect() as con, \
+         postgres.extension(con, 'test', 'HEAD'), \
+         con.execute("SELECT * FROM foo") as cur:
+
         assert cur.fetchall() == [(1,)]
 
 
@@ -188,21 +183,20 @@ def test_transaction(cli, postgres, sqitch, workdir):
         'test.control',
     ]
 
-    with (
-        postgres.load_extension(extfiles),
-        postgres.connect() as con,
-        postgres.extension(con, 'test', 'HEAD'),
-        con.execute("""
-            SELECT
-                foo(),
-                (
-                    SELECT description
-                    FROM pg_description
-                    WHERE objoid = 'foo()'::regprocedure
-                    AND classoid = 'pg_proc'::regclass
-                )
-            """) as cur,
-    ):
+    with postgres.load_extension(extfiles), \
+         postgres.connect() as con, \
+         postgres.extension(con, 'test', 'HEAD'), \
+         con.execute("""
+             SELECT
+                 foo(),
+                 (
+                     SELECT description
+                     FROM pg_description
+                     WHERE objoid = 'foo()'::regprocedure
+                     AND classoid = 'pg_proc'::regclass
+                 )
+             """) as cur:
+
         assert cur.fetchall() == [(1, 'Foo')]
 
 
@@ -231,12 +225,11 @@ def test_extschema(cli, postgres, sqitch, workdir):
 
     # Test extension via CREATE EXTENSION.
 
-    with (
-        postgres.load_extension(extfiles),
-        postgres.connect() as con,
-        postgres.extension(con, 'test', 'HEAD'),
-        con.execute("SELECT foo(), bar()") as cur,
-    ):
+    with postgres.load_extension(extfiles), \
+         postgres.connect() as con, \
+         postgres.extension(con, 'test', 'HEAD'), \
+         con.execute("SELECT foo(), bar()") as cur:
+
         assert cur.fetchall() == [('public', 'public')]
 
     # Test that sqitch-deploy can be used with the extschema placeholder.
@@ -259,10 +252,9 @@ def test_extschema(cli, postgres, sqitch, workdir):
 
         sqitch.deploy(postgres.uri())
 
-        with (
-            postgres.connect() as con,
-            con.execute("SELECT foo(), bar()") as cur,
-        ):
+        with postgres.connect() as con, \
+             con.execute("SELECT foo(), bar()") as cur:
+
             assert cur.fetchall() == [('extschema', 'extschema')]
     finally:
         # Reset the database.

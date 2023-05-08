@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "pgxsq"
 description = "Write Postgres extensions as Sqitch projects."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.8"
 license = { file = "LICENSE" }
 dynamic = [ "version" ]
 classifiers = [
@@ -14,6 +14,7 @@ classifiers = [
   "License :: OSI Approved :: BSD License",
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
