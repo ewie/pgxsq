@@ -3,6 +3,7 @@ import glob
 import io
 import os
 import os.path
+import pathlib
 import subprocess
 import tarfile
 
@@ -223,13 +224,13 @@ class Workdir:
     """
 
     def __init__(self, base):
-        self._base = base
+        self._base = pathlib.Path(base)
 
     def find_extension_files(self, extname, dirname='.'):
         extname = glob.escape(extname)
-        root = os.path.join(self._base, dirname)
+        root = self._base / dirname
         return [
-            fname
+            str(fname.relative_to(root))
             for pat in (f'{extname}.control', f'{extname}--*.sql')
-            for fname in glob.iglob(pat, root_dir=root)
+            for fname in root.glob(pat)
         ]
