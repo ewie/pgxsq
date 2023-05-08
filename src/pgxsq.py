@@ -19,6 +19,7 @@ def main(args=None):
     version = importlib.metadata.version(__name__)
 
     parser = argparse.ArgumentParser(
+        prog=__name__,
         description="""
             Generate Postgres extension files in directory DEST from the Sqitch
             project in the current working directory.  Creates directory DEST
@@ -41,7 +42,9 @@ def main(args=None):
         '--extschema',
         help="replace this substring with @extschema@",
     )
-    parser.add_argument('--version', action='version', version=version)
+    parser.add_argument(
+        '--version', action='version', version=f"%(prog)s {version}",
+    )
 
     opts = parser.parse_args(args)
 

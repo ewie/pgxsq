@@ -71,6 +71,12 @@ class Pgxsq:
 
         return 0
 
+    def version(self):
+        try:
+            pgxsq.main(['--version'])
+        except SystemExit as exc:
+            return exc.code
+
 
 class Postgres:
     """Postgres container running during tests.

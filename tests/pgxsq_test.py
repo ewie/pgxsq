@@ -1,6 +1,16 @@
+import importlib.metadata
 import textwrap
 
 import pytest
+
+
+def test_version(cli, capfd):
+    rc = cli.version()
+    assert rc == 0
+
+    stdout, _ = capfd.readouterr()
+    version = importlib.metadata.version('pgxsq')
+    assert stdout == f"pgxsq {version}\n"
 
 
 def test_tagged_head(cli, postgres, sqitch, workdir):
