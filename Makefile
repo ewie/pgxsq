@@ -41,7 +41,7 @@ install:
 
 .PHONY: test
 test: venv
-	$(venv_python) -m pytest
+	$(venv_python) -m tox
 
 .PHONY: venv
 venv: $(venv)/.gitignore
