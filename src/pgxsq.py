@@ -75,7 +75,7 @@ def read_project():
     # We cannot get the project name from the sqitch-plan output in case of an
     # empty plan.  sqitch-plan also includes the project name in its optional
     # headers but those are always omitted on empty plans.  The only other
-    # possibilty is to parse the project pragma from the plan file.  But the
+    # possibility is to parse the project pragma from the plan file.  But the
     # plan file path must be resolved from the project config first.  It's not
     # worth the effort just to generate an empty extension.
     if proc.returncode == 1:
