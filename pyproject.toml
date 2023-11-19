@@ -28,7 +28,7 @@ authors = [
 pgxsq = "pgxsq:main"
 
 [project.urls]
-"Repository" = "https://gitlab.com/ewie/pgxsq"
+"Repository" = "https://git.sr.ht/~ewie/pgxsq"
 
 [tool.pytest.ini_options]
 testpaths = "tests"
