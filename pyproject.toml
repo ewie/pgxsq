@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pgxsq"
 description = "Write Postgres extensions as Sqitch projects."
-version = "0.1.1.dev"
+version = "0.2.0"
 readme = "README.md"
 requires-python = ">=3.8"
 license.text = "BSD-3-Clause"
